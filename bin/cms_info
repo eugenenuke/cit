@@ -35,6 +35,11 @@ dbuser="Unknown"
 dbpass="Unknown"
 dbpref="Unknown"
 
+if [[ $(ls /home/vsev5/html/ | wc -l) -eq 1 ]]; then
+	echo "The root folder is empty!"
+	exit 0;
+fi
+
 # WordPress
 file=$site_root/wp-config.php
 if [ -f $file ]; then
@@ -90,10 +95,10 @@ case $1 in
 		echo $dbpref
 		;;
 	"all")
-		echo $cms $ver
-		echo $dbname
-		echo $dbuser
-		echo $dbpass
-		echo $dbpref
+		echo "CMS:	"$cms $ver
+		echo "DB:	"$dbname
+		echo "DBUser:	"$dbuser
+		echo "DBPass:	"$dbpass
+		echo "DBPref:	"$dbpref
 		;;
 esac
