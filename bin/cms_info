@@ -1,5 +1,15 @@
 #!/bin/bash
 
+################################################################################
+#
+# Script detecs the type and the version of the CMS and DB connection parameters
+# Скрипт определяет тип и версию CMS, а так же параметры подключения к БД
+#
+# Autor: 	Evgeniy Yanyuk
+# Last updated:	27.02.2018			
+#
+################################################################################
+
 if [[ $# -ne 2 ]]; then
 	echo
 	echo "Usage $0 <cmd> <site>"
