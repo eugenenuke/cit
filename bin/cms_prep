@@ -6,7 +6,7 @@ if [[ $EUID -ne 0  ]]; then echo "Must be root"; exit 1; fi
 NOCOMP="jpg/png/gif/gz/tgz/bz2/zip/7z/rar/flv/wmv/avi/mp4/mp3/ppsx/pptx/docx/pdf"
 new_host=root@www1.vsevobr.ru:/var/www/tomove/
 cms_info=/home/nuke/bin/cms_info
-dp_opts=/home/nuke/etc/mysql.cnf
+db_opts=/home/nuke/etc/mysql.cnf
 move_dir=/home/nuke/move
 
 if [ -d $move_dir ]; then mkdir -p $move_dir; fi
@@ -24,7 +24,7 @@ db=$($cms_info db $1)
 echo -n "Делаем дамп БД $db ... "
 mysqldump --defaults-extra-file=$db_opts $db > $move_dir/$db.sql
 getent passwd $1 > $move_dir/$1.txt
-#/home/nuke/bin/cms_info all $1 >> $move_dir/$1.txt
+grep "^$1" /etc/shadow >> $move_dir/$1.txt
 echo "Ok"
 
 echo -n "Передаём изменения, которые могли произойти на сайте на новый хостинг ... "
