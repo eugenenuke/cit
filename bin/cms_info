@@ -1,0 +1,34 @@
+#!/bin/bash
+
+if [[ $# -ne 2 ]]; then echo "Usage $0 <cmd> <site>"; exit 1; fi
+
+
+# WordPress
+file=/home/$2/html/wp-config.php
+if [ -f $file ]; then
+	ver=$(grep "^\$wp_version" /home/$2/html/wp-includes/version.php | cut -d\' -f 2)
+	cms="WordPress v$ver"
+	dbname=$(grep "^[^#].*DB_NAME" $file | cut -d\' -f4)
+	dbuser=$(grep "^[^#].*DB_USER" $file | cut -d\' -f4)
+	dbpass=$(grep "^[^#].*DB_PASSWORD" $file | cut -d\' -f4)
+fi
+
+case $1 in
+	"cms")
+		echo $cms
+		;;
+	"db")
+		echo $dbname
+		;;
+	"dbuser")
+		echo $dbuser
+		;;
+	"dbpass")
+		echo $dbpass
+		;;
+	"all")
+		echo $dbname
+		echo $dbuser
+		echo $dbpass
+		;;
+esac
