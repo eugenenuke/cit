@@ -9,24 +9,63 @@ if [[ $# -ne 2 ]]; then
 	echo "	db	get CMS's database name"
 	echo "	dbuser	get CMS's database user name"
 	echo "	dbpass	get CMS's database user password"
+	echo "	dbpref	get CMS's table prefix"
 	echo "	all	get all information about CMS"
 	exit 1
 fi
 
+web_root=/home
+html_path=html
+site_root=$web_root/$2/$html_path
+
+ver="Unknown"
+cms="Unknown"
+dbname="Unknown"
+dbuser="Unknown"
+dbpass="Unknown"
+dbpref="Unknown"
 
 # WordPress
-file=/home/$2/html/wp-config.php
+file=$site_root/wp-config.php
 if [ -f $file ]; then
-	ver=$(grep "^\$wp_version" /home/$2/html/wp-includes/version.php | cut -d\' -f 2)
+	ver=$(grep "^\$wp_version" $site_root/wp-includes/version.php | cut -d\' -f 2)
 	cms="WordPress v$ver"
-	dbname=$(grep "^[^#].*DB_NAME" $file | cut -d\' -f4)
-	dbuser=$(grep "^[^#].*DB_USER" $file | cut -d\' -f4)
-	dbpass=$(grep "^[^#].*DB_PASSWORD" $file | cut -d\' -f4)
+	dbname=$(grep '^[^#].*DB_NAME' $file | cut -d\' -f4)
+	dbuser=$(grep '^[^#].*DB_USER' $file | cut -d\' -f4)
+	dbpass=$(grep '^[^#].*DB_PASSWORD' $file | cut -d\' -f4)
+	dbpref=$(grep '^$table_prefix\b' $file | cut -d\' -f2)
 fi
+
+# Joomla
+file=$site_root/configuration.php
+if [ -f $file ]; then
+	dbname=$(grep '^\s*public $db\b' $file | cut -d\' -f 2)
+	dbuser=$(grep '^\s*public $user\b' $file | cut -d\' -f 2)
+	dbpass=$(grep '^\s*public $password\b' $file | cut -d\' -f 2)
+	dbpref=$(grep '^\s*public $dbprefix\b' $file | cut -d\' -f 2)
+
+	# Joomla > 1.0
+	if [ -f $site_root/includes/joomla/version.php ]; then	
+		file=$site_root/includes/joomla/version.php
+	fi
+	# Joomla > 1.5
+	if [ -f $site_root/libraries/joomla/version.php ]; then	
+		file=$site_root/libraries/joomla/version.php
+	fi
+	# Joomla > 2.5
+	if [ -f $site_root/libraries/cms/version/version.php ]; then	
+		file=$site_root/libraries/cms/version/version.php
+	fi
+	ver="$(grep -E '^\s*(public|const).+RELEASE\b' $file | cut -d\' -f 2).$(grep -E '^\s*(public|const).+DEV_LEVEL\b' $file | cut -d\' -f 2)"
+	cms=$(grep -E '^\s*(public|const).+PRODUCT\b' $file | cut -d\' -f 2)
+fi
+
+
+# dbprefix?
 
 case $1 in
 	"cms")
-		echo $cms
+		echo $cms $ver
 		;;
 	"db")
 		echo $dbname
@@ -37,9 +76,14 @@ case $1 in
 	"dbpass")
 		echo $dbpass
 		;;
+	"dbpref")
+		echo $dbpref
+		;;
 	"all")
+		echo $cms $ver
 		echo $dbname
 		echo $dbuser
 		echo $dbpass
+		echo $dbpref
 		;;
 esac
