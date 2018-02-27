@@ -12,8 +12,13 @@ new_host=root@www1.vsevobr.ru:/var/www/tomove/
 cms_info=/home/nuke/bin/cms_info
 db_opts="--defaults-extra-file=/home/nuke/etc/mysql.cnf"
 move_dir=/home/nuke/move
+
 site_path=$1
+# Отрезаем последний слеш / в пути
+if [[ -z ${1##*/} ]]; then site_path=${1%/}; fi
 site=${site_path##*/}
+# Перестраховываемся на случай пустого имени сайта
+if [[ -z $site ]]; then echo "Error!"; exit 1; fi
 
 if [ -d $move_dir ]; then mkdir -p $move_dir; fi
 
