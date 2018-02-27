@@ -1,11 +1,13 @@
 #!/bin/bash
 
+if [[ $1 == ""  ]]; then echo "Не задан сайт"; exit 1; fi
+if [[ $EUID -ne 0  ]]; then echo "Must be root"; exit 1; fi
+
 OUT=/home/nuke/move
 NOCOMP="jpg/png/gif/gz/tgz/bz2/zip/7z/rar/flv/wmv/avi/mp4/mp3/ppsx/pptx/docx/pdf"
 new_host=root@www1.vsevobr.ru:/var/www/tomove/
-
-if [[ $1 == ""  ]]; then echo "Не задан сайт"; exit 1; fi
-if [[ $EUID -ne 0  ]]; then echo "Must be root"; exit 1; fi
+cms_info=/home/nuke/bin/cms_info
+dp_opts=/home/nuke/etc/mysql.cnf
 
 echo "Передаём сайт на новый хостинг ... "
 rsync -av --delete -z --skip-compress=$NOCOMP /home/$1 $new_host
@@ -16,11 +18,11 @@ echo -n "Выключаем сайт ... "
 find /etc/apache2/sites-enabled/ -name "*$1*" -exec rm '{}' \; && service apache2 reload
 echo "Ok"
 
-db=`/home/nuke/bin/cms_info db $1`
+db=$($cms_info db $1)
 echo -n "Делаем дамп БД $db ... "
-mysqldump -u backup -psWW30fDFqH $db > $OUT/$db.sql
+mysqldump --defaults-extra-file=$db_opts $db > $OUT/$db.sql
 getent passwd $1 > $OUT/$1.txt
-/home/nuke/bin/cms_info all $1 >> $OUT/$1.txt
+#/home/nuke/bin/cms_info all $1 >> $OUT/$1.txt
 echo "Ok"
 
 echo -n "Передаём изменения, которые могли произойти на сайте на новый хостинг ... "
