@@ -1,37 +1,43 @@
 #!/bin/bash
 
-if [[ $1 == ""  ]]; then echo "Не задан сайт"; exit 1; fi
+if [[ $1 == ""  ]]; then
+	echo "Не задан сайт"
+	echo "Usage: $0 <path_to_site_root>"
+	exit 1
+fi
 if [[ $EUID -ne 0  ]]; then echo "Must be root"; exit 1; fi
 
 NOCOMP="jpg/png/gif/gz/tgz/bz2/zip/7z/rar/flv/wmv/avi/mp4/mp3/ppsx/pptx/docx/pdf"
 new_host=root@www1.vsevobr.ru:/var/www/tomove/
 cms_info=/home/nuke/bin/cms_info
-db_opts=/home/nuke/etc/mysql.cnf
+db_opts="--defaults-extra-file=/home/nuke/etc/mysql.cnf"
 move_dir=/home/nuke/move
+site_path=$1
+site=${site_path##*/}
 
 if [ -d $move_dir ]; then mkdir -p $move_dir; fi
 
 echo "Передаём сайт на новый хостинг ... "
-rsync -av --delete -z --skip-compress=$NOCOMP /home/$1 $new_host
+rsync -av --delete -z --skip-compress=$NOCOMP $site_path $new_host
 echo "Готово, нажмите любую клавишу для продолжения"
 read -n 1
 
 echo -n "Выключаем сайт ... "
-find /etc/apache2/sites-enabled/ -name "*$1*" -exec rm '{}' \; && service apache2 reload
+find /etc/apache2/sites-enabled/ -name "*$site*" -exec rm '{}' \; && service apache2 reload
 echo "Ok"
 
-db=$($cms_info db $1)
+db=$($cms_info db $site_path)
 echo -n "Делаем дамп БД $db ... "
-mysqldump --defaults-extra-file=$db_opts $db > $move_dir/$db.sql
-getent passwd $1 > $move_dir/$1.txt
-grep "^$1" /etc/shadow >> $move_dir/$1.txt
+mysqldump $db_opts $db > $move_dir/$db.sql
+getent passwd $1 > $move_dir/$site.txt
+grep "^$site" /etc/shadow >> $move_dir/$site.txt
 echo "Ok"
 
 echo -n "Передаём изменения, которые могли произойти на сайте на новый хостинг ... "
-rsync -av --delete -z --skip-compress=$NOCOMP /home/$1 $new_host
-rsync -av -z $move_dir/{$db.sql,$1.txt} $new_host/SQL/
+rsync -av --delete -z --skip-compress=$NOCOMP $site_path $new_host
+rsync -av -z $move_dir/{$db.sql,$site.txt} $new_host/SQL/
 
 echo -n "Включаем сайт ... "
-site=$(find /etc/apache2/sites-available/ -name "*$1*")
+site=$(find /etc/apache2/sites-available/ -name "*$site*")
 a2ensite ${site##*/} && service apache2 reload
 echo "Ok"

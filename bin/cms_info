@@ -77,8 +77,6 @@ if [ -f $file ]; then
 fi
 
 
-# dbprefix?
-
 case $1 in
 	"cms")
 		echo $cms $ver
