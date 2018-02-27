@@ -39,7 +39,7 @@ dbpref="Unknown"
 file=$site_root/wp-config.php
 if [ -f $file ]; then
 	ver=$(grep "^\$wp_version" $site_root/wp-includes/version.php | cut -d\' -f 2)
-	cms="WordPress v$ver"
+	cms="WordPress"
 	dbname=$(grep '^[^#].*DB_NAME' $file | cut -d\' -f4)
 	dbuser=$(grep '^[^#].*DB_USER' $file | cut -d\' -f4)
 	dbpass=$(grep '^[^#].*DB_PASSWORD' $file | cut -d\' -f4)
