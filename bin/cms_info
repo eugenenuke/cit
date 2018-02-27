@@ -54,10 +54,10 @@ fi
 # Joomla
 file=$site_root/configuration.php
 if [ -f $file ]; then
-	dbname=$(grep '^\s*public $db\b' $file | cut -d\' -f 2)
-	dbuser=$(grep '^\s*public $user\b' $file | cut -d\' -f 2)
-	dbpass=$(grep '^\s*public $password\b' $file | cut -d\' -f 2)
-	dbpref=$(grep '^\s*public $dbprefix\b' $file | cut -d\' -f 2)
+	dbname=$(grep -E '^\s*(public|var) \$db\b' $file | cut -d\' -f 2)
+	dbuser=$(grep -E '^\s*(public|var) \$user\b' $file | cut -d\' -f 2)
+	dbpass=$(grep -E '^\s*(public|var) \$password\b' $file | cut -d\' -f 2)
+	dbpref=$(grep -E '^\s*(public|var) \$dbprefix\b' $file | cut -d\' -f 2)
 
 	# Joomla > 1.0
 	if [ -f $site_root/includes/joomla/version.php ]; then	
@@ -71,8 +71,8 @@ if [ -f $file ]; then
 	if [ -f $site_root/libraries/cms/version/version.php ]; then	
 		file=$site_root/libraries/cms/version/version.php
 	fi
-	ver="$(grep -E '^\s*(public|const).+RELEASE\b' $file | cut -d\' -f 2).$(grep -E '^\s*(public|const).+DEV_LEVEL\b' $file | cut -d\' -f 2)"
-	cms=$(grep -E '^\s*(public|const).+PRODUCT\b' $file | cut -d\' -f 2)
+	ver="$(grep -E '^\s*(public|const|var).+RELEASE\b' $file | cut -d\' -f 2).$(grep -E '^\s*(public|const|var).+DEV_LEVEL\b' $file | cut -d\' -f 2)"
+	cms=$(grep -E '^\s*(public|const|var).+PRODUCT\b' $file | cut -d\' -f 2)
 fi
 
 
