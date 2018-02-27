@@ -40,7 +40,7 @@ dbpref=$($cms_info dbpref $from_site)
 
 echo "Создаём базу данных $db"
 echo "Пользователь: $dbuser"
-mysql $db_opts <<< "drop database $db;"
+mysql $db_opts <<< "drop database if exists $db;"
 mysql $db_opts <<< "create database $db;"
 mysql $db_opts <<< "grant all privileges on $db.* to $dbuser@localhost identified by '$dbpass';"
 echo -n "Импортируем базу данных $db ... "
