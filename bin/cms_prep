@@ -3,11 +3,13 @@
 if [[ $1 == ""  ]]; then echo "Не задан сайт"; exit 1; fi
 if [[ $EUID -ne 0  ]]; then echo "Must be root"; exit 1; fi
 
-OUT=/home/nuke/move
 NOCOMP="jpg/png/gif/gz/tgz/bz2/zip/7z/rar/flv/wmv/avi/mp4/mp3/ppsx/pptx/docx/pdf"
 new_host=root@www1.vsevobr.ru:/var/www/tomove/
 cms_info=/home/nuke/bin/cms_info
 dp_opts=/home/nuke/etc/mysql.cnf
+move_dir=/home/nuke/move
+
+if [ -d $move_dir ]; then mkdir -p $move_dir; fi
 
 echo "Передаём сайт на новый хостинг ... "
 rsync -av --delete -z --skip-compress=$NOCOMP /home/$1 $new_host
@@ -20,14 +22,14 @@ echo "Ok"
 
 db=$($cms_info db $1)
 echo -n "Делаем дамп БД $db ... "
-mysqldump --defaults-extra-file=$db_opts $db > $OUT/$db.sql
-getent passwd $1 > $OUT/$1.txt
-#/home/nuke/bin/cms_info all $1 >> $OUT/$1.txt
+mysqldump --defaults-extra-file=$db_opts $db > $move_dir/$db.sql
+getent passwd $1 > $move_dir/$1.txt
+#/home/nuke/bin/cms_info all $1 >> $move_dir/$1.txt
 echo "Ok"
 
 echo -n "Передаём изменения, которые могли произойти на сайте на новый хостинг ... "
 rsync -av --delete -z --skip-compress=$NOCOMP /home/$1 $new_host
-rsync -av -z $OUT/{$db.sql,$1.txt} $new_host/SQL/
+rsync -av -z $move_dir/{$db.sql,$1.txt} $new_host/SQL/
 
 echo -n "Включаем сайт ... "
 site=$(find /etc/apache2/sites-available/ -name "*$1*")
