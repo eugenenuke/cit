@@ -35,7 +35,7 @@ dbuser="Unknown"
 dbpass="Unknown"
 dbpref="Unknown"
 
-if [[ $(ls /home/vsev5/html/ | wc -l) -eq 1 ]]; then
+if [[ $(ls $site_root | wc -l) -eq 1 ]]; then
 	echo "The root folder is empty!"
 	exit 0;
 fi
