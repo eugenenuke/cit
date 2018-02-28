@@ -1,0 +1,16 @@
+#!/bin/bash
+
+hpath=/home
+cms_info=/home/nuke/bin/cms_info
+num=1
+
+for site in $(find $hpath -maxdepth 1 -type d)
+do
+	if [[ -d $site/html ]]; then
+#		echo -ne "$num\t$site\t"
+		echo -ne "$site\t"
+		if [[ ${#site} -lt 16 ]]; then echo -ne "\t"; fi
+		$cms_info cms $site
+		num=$((num + 1))
+	fi
+done
