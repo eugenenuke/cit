@@ -37,8 +37,9 @@ dbpass="Unknown"
 dbpref="Unknown"
 
 if [[ $(ls $site_root | wc -l) -eq 1 ]]; then
-	echo "The root folder is empty!"
-	exit 0;
+	cms="Empty"
+#	echo "The root folder is empty!"
+#	exit 0;
 fi
 
 # WordPress
