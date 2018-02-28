@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Скрипт создаёт нового пользователя для хостинга на www1.vsevobr.ru
+
+#if [ "$EUID" -ne "0" ]; then echo "You have to be root!"; exit 1; fi
+
+if [ "$#" -lt "1" ]; then echo "Usage: $0 <new_user> [<from_user>]"; exit 1; fi
+
+#if getent passwd $1 > /dev/null; then echo "User <$1> exists!"; exit 1; fi
+
+BASE_DIR=/var/www/sites
+HOME_DIR=$BASE_DIR/$1
+WWWGRP=www$1
+SITE_CONF=$HOME_DIR/etc/$1.conf
+#SITE_CONF=/etc/apache2/sites-available/$1.conf
+ADMGRP=www-admins
+AWSTATSUSR=awstats
+TEMPLDIR=/home/nuke/bin/etc
+
+
+TOMOVE=/var/www/tomove
+
+###############################################################################
+
+file=$BASE_DIR/$1/html/configuration.php
+logs=$BASE_DIR/$1/html/logs
+tmp=$BASE_DIR/$1/html/tmp
+ftp=$1.vsevobr.ru
+
+e1="/[^#]*log_path/ s_([^']*')([^']*)('.*)_\1"$logs"\3_"
+e2="/[^#]*tmp_path/ s_([^']*')([^']*)('.*)_\1"$tmp"\3_"
+#e3="/[^#]*ftp_host/ s_([^']*')([^']*)('.*)_\1"$ftp"\3_"
+
+sed -r -i -e "$e1" -e "$e2" $file
+
+chmod g-w $file
