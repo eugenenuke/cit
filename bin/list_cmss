@@ -13,4 +13,4 @@ do
 		$cms_info cms $site
 		num=$((num + 1))
 	fi
-done
+done | sort -k 2 | cat -n

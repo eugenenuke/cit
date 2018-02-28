@@ -8,7 +8,7 @@ fi
 if [[ $EUID -ne 0  ]]; then echo "Must be root"; exit 1; fi
 
 NOCOMP="jpg/png/gif/gz/tgz/bz2/zip/7z/rar/flv/wmv/avi/mp4/mp3/ppsx/pptx/docx/pdf"
-new_host=root@www1.vsevobr.ru:/var/www/tomove/
+. /home/nuke/etc/new_host.cfg
 cms_info=/home/nuke/bin/cms_info
 db_opts="--defaults-extra-file=/home/nuke/etc/mysql.cnf"
 move_dir=/home/nuke/move

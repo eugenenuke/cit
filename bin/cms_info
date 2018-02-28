@@ -36,7 +36,7 @@ dbuser="Unknown"
 dbpass="Unknown"
 dbpref="Unknown"
 
-if [[ $(ls $site_root | wc -l) -eq 1 ]]; then
+if [[ $(ls $site_root | wc -l) -lt 2 ]]; then
 	cms="Empty"
 #	echo "The root folder is empty!"
 #	exit 0;
