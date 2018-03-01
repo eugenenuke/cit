@@ -49,6 +49,7 @@ if [[ -f $file ]]; then
 	# Вырезаем комментарии и ищем DB_NAME, DB_USER и DB_PASSWORD
 	if sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_NAME" &> /dev/null ; then
 		dbname=$(sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_NAME" | cut -d\' -f 4)
+		cms="CMS1"
 	fi
 	if sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_USER" &> /dev/null ; then
 		dbuser=$(sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_USER" | cut -d\' -f 4)
