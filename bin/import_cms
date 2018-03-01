@@ -16,9 +16,13 @@ SITE_CONF=$HOME_DIR/etc/$1.conf
 ADMGRP=www-admins
 AWSTATSUSR=awstats
 TEMPLDIR=/home/nuke/bin/etc
-
-
 TOMOVE=/var/www/tomove
+new_domain=vsevobr.ru
+
+if ! ping -c1 $1.$new_domain &> /dev/null ; then
+	echo "DNS-запись для $1.$new_domain отсутствует"
+	exit 1;
+fi
 
 ################################################################################
 # Подготавливаем окружение для нового сайта
@@ -41,7 +45,7 @@ setfacl -m u:$1:rx,u:$AWSTATSUSR:rx,g:$WWWGRP:rx $HOME_DIR
 
 # Перемещаем старые логи и выставляем права на них
 #mv $TOMOVE/$1/etc/*log* $HOME_DIR/log/
-if [ -n $2 ]; then
+if [[ -n $2 ]]; then
 	rsync -av --delete $TOMOVE/$2/etc/*log* $HOME_DIR/log 
 else
 	rsync -av --delete $TOMOVE/$1/etc/*log* $HOME_DIR/log 
@@ -52,7 +56,7 @@ chown root:$ADMGRP $HOME_DIR{/etc,/log}
 
 #rm -rf $HOME_DIR/html
 #mv $TOMOVE/$1/html $HOME_DIR/
-if [ -n $2 ]; then
+if [[ -n $2 ]]; then
 	rsync -av --delete $TOMOVE/$2/html/ /$HOME_DIR/html
 else
 	rsync -av --delete $TOMOVE/$1/html/ /$HOME_DIR/html
@@ -72,7 +76,6 @@ if [[ -d $HOME_DIR/html/wp-content/uploads ]]; then
 fi
 
 # Копируем информацию о новых пользователях в jail
-#cp -a /etc/passwd /var/www/etc/passwd
 getent passwd $1 >> /var/www/etc/passwd
 getent group $WWWGRP >> /var/www/etc/group
 
@@ -90,7 +93,7 @@ a2ensite $1
 systemctl reload apache2.service
 
 echo "Получаем сертификат для сайта..."
-letsencrypt certonly -m eugenenuke@gmail.com -d $1.vsevobr.ru -t --agree-tos --webroot -w /var/www/sites/$1/html/
+letsencrypt certonly -m eugenenuke@gmail.com -d $1.$new_domain -t --agree-tos --webroot -w /var/www/sites/$1/html/
 
 # Переключаем сайт на HTTPS
 cp $TEMPLDIR/template_ssl_lokos.conf $SITE_CONF
@@ -105,8 +108,8 @@ systemctl reload apache2.service
 # Добавляем сайт в awstats
 ################################################################################
 AWPATH=/etc/awstats
-cp $AWPATH/templates/awstats.template.conf $AWPATH/awstats.$1.vsevobr.ru.conf
-sed -i	-e "s/_CHANGE_ME_/$1/" $AWPATH/awstats.$1.vsevobr.ru.conf
+cp $AWPATH/templates/awstats.template.conf $AWPATH/awstats.$1.$new_domain.conf
+sed -i	-e "s/_CHANGE_ME_/$1/" $AWPATH/awstats.$1.$new_domain.conf
 
 # Добавляем пользователя в .htpasswd для /cgi-bin/awstats.pl
 # Создаём БД
