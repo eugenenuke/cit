@@ -32,6 +32,10 @@ find /etc/apache2/sites-enabled/ -name "*$site*" -exec rm '{}' \; && service apa
 echo "Ok"
 
 db=$($cms_info db $site_path)
+if [[ $db == "Unknown" ]]; then
+	read -p "Введите имя базы данных:" db
+fi
+
 echo -n "Делаем дамп БД $db ... "
 mysqldump $db_opts $db > $move_dir/$db.sql
 getent passwd $1 > $move_dir/$site.txt
