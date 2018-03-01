@@ -42,9 +42,26 @@ if [[ $(ls $site_root | wc -l) -lt 2 ]]; then
 #	exit 0;
 fi
 
+
+# SelfMade
+file=$site_root/config.php
+if [[ -f $file ]]; then
+	# Вырезаем комментарии и ищем DB_NAME, DB_USER и DB_PASSWORD
+	if sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_NAME" &> /dev/null ; then
+		dbname=$(sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_NAME" | cut -d\' -f 4)
+	fi
+	if sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_USER" &> /dev/null ; then
+		dbuser=$(sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_USER" | cut -d\' -f 4)
+	fi
+	if sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_PASSWORD" &> /dev/null ; then
+		dbpass=$(sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_PASSWORD" | cut -d\' -f 4)
+	fi
+	dbpref=""
+fi
+
 # WordPress
 file=$site_root/wp-config.php
-if [ -f $file ]; then
+if [[ -f $file ]]; then
 	ver=$(grep "^\$wp_version" $site_root/wp-includes/version.php | cut -d\' -f 2)
 	cms="WordPress"
 	dbname=$(grep '^[^#].*DB_NAME' $file | cut -d\' -f4)
@@ -55,22 +72,22 @@ fi
 
 # Joomla
 file=$site_root/configuration.php
-if [ -f $file ]; then
+if [[ -f $file ]]; then
 	dbname=$(grep -E '^\s*(public|var) \$db\b' $file | cut -d\' -f 2)
 	dbuser=$(grep -E '^\s*(public|var) \$user\b' $file | cut -d\' -f 2)
 	dbpass=$(grep -E '^\s*(public|var) \$password\b' $file | cut -d\' -f 2)
 	dbpref=$(grep -E '^\s*(public|var) \$dbprefix\b' $file | cut -d\' -f 2)
 
 	# Joomla > 1.0
-	if [ -f $site_root/includes/joomla/version.php ]; then	
+	if [[ -f $site_root/includes/joomla/version.php ]]; then	
 		file=$site_root/includes/joomla/version.php
 	fi
 	# Joomla > 1.5
-	if [ -f $site_root/libraries/joomla/version.php ]; then	
+	if [[ -f $site_root/libraries/joomla/version.php ]]; then	
 		file=$site_root/libraries/joomla/version.php
 	fi
 	# Joomla > 2.5
-	if [ -f $site_root/libraries/cms/version/version.php ]; then	
+	if [[ -f $site_root/libraries/cms/version/version.php ]]; then	
 		file=$site_root/libraries/cms/version/version.php
 	fi
 	ver="$(grep -E '^\s*(public|const|var).+RELEASE\b' $file | cut -d\' -f 2).$(grep -E '^\s*(public|const|var).+DEV_LEVEL\b' $file | cut -d\' -f 2)"
