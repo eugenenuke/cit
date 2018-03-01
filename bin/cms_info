@@ -47,17 +47,20 @@ fi
 file=$site_root/config.php
 if [[ -f $file ]]; then
 	# Вырезаем комментарии и ищем DB_NAME, DB_USER и DB_PASSWORD
-	if sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_NAME" &> /dev/null ; then
-		dbname=$(sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_NAME" | cut -d\' -f 4)
+	cms_tmp_file=/tmp/cmstmp
+	egrep -v '(\s*/\*.*\*/)|(^//\s*)' $file | sed '\_/\*_,\_\*/_ d' | grep '^[^/]*DB_' > $cms_tmp_file
+	if grep 'DB_NAME' $cms_tmp_file &> /dev/null; then
+		dbname=$(grep "DB_NAME" $cms_tmp_file | cut -d\' -f 4)
 		cms="CMS1"
 	fi
-	if sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_USER" &> /dev/null ; then
-		dbuser=$(sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_USER" | cut -d\' -f 4)
+	if grep 'DB_USER' $cms_tmp_file &> /dev/null; then
+		dbuser=$(grep "DB_USER" $cms_tmp_file | cut -d\' -f 4)
 	fi
-	if sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_PASSWORD" &> /dev/null ; then
-		dbpass=$(sed '\_/\*_,\_\*/_ d' $file | grep "^[^#]*DB_PASSWORD" | cut -d\' -f 4)
+	if grep 'DB_PASSWORD' $cms_tmp_file &> /dev/null; then
+		dbpass=$(grep "DB_PASSWORD" $cms_tmp_file | cut -d\' -f 4)
 	fi
 	dbpref=""
+	rm $cms_tmp_file
 fi
 
 # WordPress
