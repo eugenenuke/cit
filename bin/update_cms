@@ -53,6 +53,10 @@ if [[ -d $HOME_DIR/html/wp-content/uploads ]]; then
 	chmod -R g+w $HOME_DIR/html/wp-content/uploads
 fi
 
+echo "Запускаем скрипт после переноса..."
+scr=/home/nuke/git/tune/$1/after.sh
+if [[ -x $scr ]]; then $scr; fi
+
 ################################################################################
 # Создаём БД
 ################################################################################
