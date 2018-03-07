@@ -28,6 +28,7 @@ fi
 # Подготавливаем окружение для нового сайта
 ################################################################################
 
+echo "Создаём пользователя и группу, назначаем права..."
 # Создаём группу для Apache
 groupadd $WWWGRP
 
@@ -44,6 +45,7 @@ chown root:$ADMGRP $HOME_DIR
 setfacl -m u:$1:rx,u:$AWSTATSUSR:rx,g:$WWWGRP:rx $HOME_DIR
 
 # Перемещаем старые логи и выставляем права на них
+echo "Копируем логи и папку html..."
 #mv $TOMOVE/$1/etc/*log* $HOME_DIR/log/
 if [[ -n $2 ]]; then
 	rsync -av --delete $TOMOVE/$2/etc/*log* $HOME_DIR/log 
@@ -61,6 +63,8 @@ if [[ -n $2 ]]; then
 else
 	rsync -av --delete $TOMOVE/$1/html/ /$HOME_DIR/html
 fi
+
+echo "Выставляем права на скопированные файлы и папки..."
 chown -R $1 $HOME_DIR/html
 chmod -R u+w,o-w $HOME_DIR/html
 chgrp -R $WWWGRP $HOME_DIR/html
@@ -83,10 +87,23 @@ getent group $WWWGRP >> /var/www/etc/group
 ################################################################################
 # Создаём новый сайт
 ################################################################################
-cp $TEMPLDIR/template.conf $SITE_CONF
+# cp $TEMPLDIR/template.conf $SITE_CONF
+# ln -s $SITE_CONF /etc/apache2/sites-available/$1.conf
+
+# sed -i	-e "s/example\.com/$1\.vsevobr\.ru/" \
+# 	-e "s/wwwgroup/$WWWGRP/" \
+# 	-e "s_/wwwuser/_/$1/_g" $SITE_CONF
+# a2ensite $1
+# systemctl reload apache2.service
+
+
+# Переключаем сайт на HTTPS
+echo "Создаём и включаем сайт..."
+cp $TEMPLDIR/template_ssl_lokos.conf $SITE_CONF
 ln -s $SITE_CONF /etc/apache2/sites-available/$1.conf
 
 sed -i	-e "s/example\.com/$1\.vsevobr\.ru/" \
+	-e "s/example\.lokos\.net/$1\.vsv\.lokos\.net/" \
 	-e "s/wwwgroup/$WWWGRP/" \
 	-e "s_/wwwuser/_/$1/_g" $SITE_CONF
 a2ensite $1
@@ -95,14 +112,12 @@ systemctl reload apache2.service
 echo "Получаем сертификат для сайта..."
 letsencrypt certonly -m eugenenuke@gmail.com -d $1.$new_domain -t --agree-tos --webroot -w /var/www/sites/$1/html/
 
-# Переключаем сайт на HTTPS
-cp $TEMPLDIR/template_ssl_lokos.conf $SITE_CONF
-sed -i	-e "s/example\.com/$1\.vsevobr\.ru/" \
-	-e "s/example\.lokos\.net/$1\.vsv\.lokos\.net/" \
-	-e "s/wwwgroup/$WWWGRP/" \
-	-e "s_/wwwuser/_/$1/_g" $SITE_CONF
+sed -ri 's/^#(\s*SSL)/\1/' $SITE_CONF
 systemctl reload apache2.service
 
+echo "Запускаем скрипт после переноса..."
+scr=/home/nuke/git/tune/$1/after.sh
+if [[ -x $scr ]]; then $scr; fi
 
 ################################################################################
 # Добавляем сайт в awstats
@@ -111,5 +126,37 @@ AWPATH=/etc/awstats
 cp $AWPATH/templates/awstats.template.conf $AWPATH/awstats.$1.$new_domain.conf
 sed -i	-e "s/_CHANGE_ME_/$1/" $AWPATH/awstats.$1.$new_domain.conf
 
+
 # Добавляем пользователя в .htpasswd для /cgi-bin/awstats.pl
+
+
+################################################################################
 # Создаём БД
+################################################################################
+cms_info=/home/nuke/bin/cms_info
+db_opts="--defaults-extra-file=/home/nuke/etc/mysql_r.cnf"
+if [[ -n $2 ]]; then
+	from_site=$2
+else
+	from_site=$1
+fi
+from_site=$TOMOVE/$from_site
+
+db=$($cms_info db $from_site)
+dbuser=$($cms_info dbuser $from_site)
+dbpass=$($cms_info dbpass $from_site)
+dbpref=$($cms_info dbpref $from_site)
+
+echo "Создаём базу данных $db"
+echo "Пользователь: $dbuser"
+mysql $db_opts <<< "drop database if exists $db;"
+mysql $db_opts <<< "create database $db;"
+mysql $db_opts <<< "grant all privileges on $db.* to $dbuser@localhost identified by '$dbpass';"
+echo -n "Импортируем базу данных $db ... "
+mysql $db_opts $db < $TOMOVE/SQL/$db.sql
+echo "Ok"
+
+if [[ -f $HOME_DIR/html/wp-config.php ]]; then
+	echo "Исправляем ссылки сайта для WordPress"
+	mysql $db_opts $db <<< "update ${dbpref}options set option_value='https://$1.vsevobr.ru' where option_name='siteurl' or option_name='home';"
+fi
