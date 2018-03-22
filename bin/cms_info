@@ -38,6 +38,7 @@ dbpref="Unknown"
 
 if [[ $(ls $site_root | wc -l) -lt 2 ]]; then
 	cms="Empty"
+	ver=''
 #	echo "The root folder is empty!"
 #	exit 0;
 fi
@@ -59,9 +60,69 @@ if [[ -f $file ]]; then
 	if grep 'DB_PASSWORD' $cms_tmp_file &> /dev/null; then
 		dbpass=$(grep "DB_PASSWORD" $cms_tmp_file | cut -d\' -f 4)
 	fi
+
+	egrep -v '(\s*/\*.*\*/)|(^//\s*)' $file | sed '\_/\*_,\_\*/_ d' | grep '^[^/]*_DB' > $cms_tmp_file
+	if grep 'DATABASENAME_DB' $cms_tmp_file &> /dev/null; then
+		dbname=$(grep "DATABASENAME_DB" $cms_tmp_file | cut -d\' -f 4)
+		cms="CMS2"
+	fi
+	if grep 'USERNAME_DB' $cms_tmp_file &> /dev/null; then
+		dbuser=$(grep "USERNAME_DB" $cms_tmp_file | cut -d\' -f 4)
+	fi
+	if grep 'PASSWORD_DB' $cms_tmp_file &> /dev/null; then
+		dbpass=$(grep "PASSWORD_DB" $cms_tmp_file | cut -d\' -f 4)
+	fi
+
 	dbpref=""
 	rm $cms_tmp_file
 fi
+file=$site_root/cofiguration.php
+if [[ -f $file ]]; then
+	cms_tmp_file=/tmp/cmstmp
+	egrep -v '(\s*/\*.*\*/)|(^//\s*)' $file | sed '\_/\*_,\_\*/_ d' | grep '^[^/]*_DB_' > $cms_tmp_file
+	if grep 'MYSQL_DB_NAME' $cms_tmp_file &> /dev/null; then
+		dbname=$(grep "MYSQL_DB_NAME" $cms_tmp_file | cut -d\' -f 4)
+		cms="CMS3"
+	fi
+	if grep 'MYSQL_DB_USER' $cms_tmp_file &> /dev/null; then
+		dbuser=$(grep "DB_USER" $cms_tmp_file | cut -d\' -f 4)
+	fi
+	if grep 'MYSQL_DB_PASSWORD' $cms_tmp_file &> /dev/null; then
+		dbpass=$(grep "MYSQL_DB_PASSWORD" $cms_tmp_file | cut -d\' -f 4)
+	fi
+
+	dbpref=""
+	rm $cms_tmp_file
+fi
+file=$site_root/version.php
+if [[ -f $file ]]; then
+	if grep 'mysqli_connect' $file &> /dev/null; then
+		dbname=$(grep 'mysqli_connect' $file | cut -d\' -f8)
+		dbuser=$(grep 'mysqli_connect' $file | cut -d\' -f4)
+		dbpass=$(grep 'mysqli_connect' $file | cut -d\' -f6)
+		cms=Liceum1CMS
+		dbpref=''
+	fi
+fi
+
+#Moodle
+file=$site_root/config.php
+if [[ -f $file ]]; then
+        if grep '^\$CFG->dbname' $file &> /dev/null; then
+                dbname=$(grep '^\$CFG->dbname' $file | cut -d\' -f 2)
+                cms="Moodle"
+        fi
+        if grep '^\$CFG->dbuser' $file &> /dev/null; then
+                dbuser=$(grep '^\$CFG->dbuser' $file | cut -d\' -f 2)
+        fi
+        if grep '^\$CFG->dbpass' $file &> /dev/null; then
+                dbpass=$(grep '^\$CFG->dbpass' $file | cut -d\' -f 2)
+        fi
+        if grep '^\$CFG->prefix' $file &> /dev/null; then
+                dbpref=$(grep '^\$CFG->prefix' $file | cut -d\' -f 2)
+        fi
+fi
+
 
 # WordPress
 file=$site_root/wp-config.php
@@ -98,6 +159,17 @@ if [[ -f $file ]]; then
 	cms=$(grep -E '^\s*(public|const|var).+PRODUCT\b' $file | cut -d\' -f 2)
 fi
 
+if [[ $cms == "Unknown" ]]; then
+	php_num=$(find $site_root -name '*.php' | wc -l)
+	if [[ php_num -lt 10 ]]; then
+		cms='Static'
+		ver=''
+		dbname=''
+		dbuser=''
+		dbpass=''
+		dbpref=''
+	fi
+fi
 
 case $1 in
 	"cms")

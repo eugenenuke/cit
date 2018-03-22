@@ -12,6 +12,7 @@ do
 		cms_ver=$($cms_info cms $site)
 		echo -ne "$cms_ver\t"
 		if [[ ${#cms_ver} -lt 16 ]]; then echo -ne "\t"; fi
+		if [[ ${#cms_ver} -lt 8 ]]; then echo -ne "\t"; fi
 		grep '^[^#].*Server[NA][al]' $site/etc/site.conf | awk '{print $2}' | paste -sd","
 		
 		num=$((num + 1))
