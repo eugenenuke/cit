@@ -26,8 +26,9 @@ if [ -d $move_dir ]; then mkdir -p $move_dir; fi
 echo "Передаём сайт на новый хостинг ... "
 rsync -av --delete -z --skip-compress=$NOCOMP $site_path $new_host
 #echo "Готово, нажмите любую клавишу для продолжения"
-read -p "Готово, продолжаем? (y/n)" answer
-if [[ $answer == 'n' ]]; then exit 0; fi
+
+# read -p "Готово, продолжаем? (y/n)" answer
+# if [[ $answer == 'n' ]]; then exit 0; fi
 
 echo -n "Выключаем сайт ... "
 find /etc/apache2/sites-enabled/ -name "*$site*" -exec rm '{}' \; && service apache2 reload
